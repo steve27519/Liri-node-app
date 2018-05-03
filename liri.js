@@ -1,14 +1,19 @@
 //grabbing from keys//
 require("dotenv").config();
+var Spotify = require("node-spotify-api");
 var keys = require("./keys");
-var twitter = require("twitter");
-var spotify = require("spotify");
-var client = new Twitter(keys.twitter);
 var request = require("request");
+
+var twitter = require("twitter");
+
+var spotify = new Spotify(keys.spotify);
+var client = new twitter(keys.twitter);
+
 var fs = require("fs");
 //array storing//
 var nodeArgv = process.argv;
-var command = process.argv[2];
+var action = process.argv[2];
+var userChoice = process.argv[3];
 //movie or song
 var x = "";
 // multiple words
@@ -20,35 +25,40 @@ for (var i = 3; i < nodeArgv.length; i++) {
     }
 }
 
-//switching
-switch (command) {
-    case "my-tweets":
-        showTweets();
-        break;
 
-    case "spotify-this-song":
-        if (x) {
-            spotifySong(x);
-        } else {
-            spotifySong("The Sign");
-        }
-        break;
 
-    case "movie-this":
-        if (x) {
-            omdbData(x)
-        } else {
-            omdbData("Mr. Nobody")
-        }
-        break;
+function runAction(action, userChoice) {
+    //switching
+    switch (action) {
+        case "my-tweets":
+            showTweets();
+            break;
 
-    case "do-what-it-says":
-        doThing();
-        break;
+        case "spotify-this-song":
+            if (userChoice) {
+                spotifySong(userChoice);
+            } else {
+                spotifySong("The Sign");
+            }
+            break;
 
-    default:
-        console.log("{Please enter a command: my-tweets, spotify-this-song, movie-this, do-what-it-says}");
-        break;
+        case "movie-this":
+            if (userChoice) {
+                console.log("userChoice: " + userChoice);
+                omdbData(userChoice);
+            } else {
+                omdbData("Mr. Nobody")
+            }
+            break;
+
+        case "do-what-it-says":
+            doThing();
+            break;
+
+        default:
+            console.log("{Please enter a command: my-tweets, spotify-this-song, movie-this, do-what-it-says}");
+            break;
+    }
 }
 
 function showTweets() {
@@ -60,11 +70,11 @@ function showTweets() {
         if (!error) {
             for (var i = 0; i < tweets.length; i++) {
                 var date = tweets[i].created_at;
-                console.log("@fakeclasstweets: " + tweets[i].text + " Send At: " + date.substring(0, 19));
+                console.log("@fakeclasstweets: " + tweets[i].text + " Sent At: " + date.substring(0, 19));
                 console.log("-----------------------");
 
                 //adding text to file
-                fs.appendFile('log.txt', "@fakeclasstweets: " + tweets[i].text + " Send At: " + date.substring(0, 19));
+                fs.appendFile('log.txt', "@fakeclasstweets: " + tweets[i].text + " Sent At: " + date.substring(0, 19));
                 fs.appendFile('log.txt', "-----------------------");
             }
         } else {
@@ -81,7 +91,7 @@ function spotifySong(song) {
         if (!error) {
             for (var i = 0; i < data.tracks.items.length; i++) {
                 var songData = data.tracks.items[i];
-                console.log("Artist: " + songData.artists[0].name);
+                console.log("Artist: " + songData.artists.name);
                 console.log("Song: " + songData.name);
                 console.log("Preview URL: " + songData.preview_url);
                 console.log("Album: " + songData.album.name);
@@ -101,7 +111,7 @@ function spotifySong(song) {
 }
 
 function omdbData(movie) {
-    var omdbURL = 'http://www.omdbapi.com/?t=' + movie + '&plot=short&tomatoes=true';
+    var omdbURL = 'http://www.omdbapi.com/?t=' + movie + '&y=&plot=short&tomatoes=true&apikey=trilogy';
 
     request(omdbURL, function (error, response, body) {
         if (!error && response.statusCode == 200) {
@@ -117,7 +127,7 @@ function omdbData(movie) {
             console.log("Actors: " + body.Actors);
            
 
-            //adds text to log.txt
+            //adds text 
             fs.appendFile('log.txt', "Title: " + body.Title);
             fs.appendFile('log.txt', "Release Year: " + body.Year);
             fs.appendFile('log.txt', "IMdB Rating: " + body.imdbRating);
@@ -153,3 +163,5 @@ function doThing() {
         spotifySong(txt[1]);
     });
 }
+
+runAction(action, userChoice);
